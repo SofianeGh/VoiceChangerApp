@@ -1,0 +1,11 @@
+# Paquets Python pour tools/convert_rvc.py (conversion des modèles RVC .pth en .onnx), testés avec Python 3.12.
+# Installation, depuis le dossier du projet :
+#   tools/.venv/Scripts/python.exe -m pip install -r tools/requirements.txt
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+
+torch==2.14.1
+onnx==1.23.2
+onnxscript==0.7.2
+numpy==2.5.3
+scipy==1.18.1

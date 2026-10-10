@@ -48,8 +48,21 @@ $(PLUGIN_DIR)/%.dll: $(SRC_DIR)/plugins/%.cpp $(PLUGIN_HDRS) | $(PLUGIN_DIR)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# Tests : chaque plugin sur un signal de synthèse, puis la hauteur visée par les plugins de type de voix
+TEST_DIR = bin/tests
+
+$(TEST_DIR)/%.exe: tests/%.cpp | $(TEST_DIR)
+	$(CXX) -std=c++20 -Wall -Wextra -O2 $< -o $@ -static
+
+test: $(PLUGINS) $(TEST_DIR)/plugin_smoke_test.exe $(TEST_DIR)/voice_type_test.exe
+	$(TEST_DIR)/plugin_smoke_test.exe $(PLUGINS)
+	$(TEST_DIR)/voice_type_test.exe \
+		$(PLUGIN_DIR)/VoiceHommePlugin.dll 100 \
+		$(PLUGIN_DIR)/VoiceFemmePlugin.dll 210 \
+		$(PLUGIN_DIR)/VoiceEnfantPlugin.dll 290
+
 # Création des dossiers si absents
-bin $(PLUGIN_DIR) $(OBJ_DIR):
+bin $(PLUGIN_DIR) $(OBJ_DIR) $(TEST_DIR):
 	mkdir -p $@
 
 # Inclusion des fichiers de dépendances (.d)
@@ -64,4 +77,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: all test clean fclean re
