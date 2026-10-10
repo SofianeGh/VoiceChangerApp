@@ -1,18 +1,52 @@
 using System;
 using System.Diagnostics;
 using System.Windows;
+using Microsoft.Win32;
 using VoiceChangerApp.ViewModels;
+using VoiceChangerApp.VoiceClone;
 
 namespace VoiceChangerApp
 {
     public partial class MainWindow : Window
     {
         private readonly MainViewModel _viewModel = new MainViewModel();
+        private readonly VoiceCloneViewModel _cloneViewModel = new VoiceCloneViewModel();
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = _viewModel;
+            ClonePanel.DataContext = _cloneViewModel;
+
+            // Le moteur audio est recréé à chaque changement de périphérique : la conversion doit être réactivée
+            _viewModel.EngineRestarted += _cloneViewModel.Apply;
+
+            _cloneViewModel.ConfirmDownload = (fileName, sizeMb, url) =>
+                MessageBox.Show(this,
+                    "Pour utiliser une voix de personnage, il faut un modèle de base commun à tous les personnages.\n\n" +
+                    $"Fichier : {fileName} (environ {sizeMb} Mo)\nSource : {url}\n\n" +
+                    "Il est téléchargé une seule fois. Continuer ?",
+                    "Modèle de base", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+        }
+
+        private void OnAddCloneVoice(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Choisir le modèle de voix du personnage",
+                Filter = "Modèle RVC exporté en ONNX (*.onnx)|*.onnx",
+            };
+            if (dialog.ShowDialog(this) != true) return;
+
+            try
+            {
+                _cloneViewModel.AddVoice(dialog.FileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Impossible d'ajouter cette voix : " + ex.Message, "Voix de personnage",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void OnOpenPluginFolder(object sender, RoutedEventArgs e)
@@ -58,6 +92,7 @@ namespace VoiceChangerApp
 
         private void OnClosed(object sender, EventArgs e)
         {
+            _cloneViewModel.Shutdown();
             _viewModel.Shutdown();
         }
     }

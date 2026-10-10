@@ -35,6 +35,19 @@ namespace VoiceChangerApp.Interop
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void VC_SetEffectEnabled(int effectIndex, [MarshalAs(UnmanagedType.I1)] bool enabled);
 
+        // Conversion de voix externe (clonage IA) : le micro est lu en mono, la voix convertie est renvoyée
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void VC_SetVoiceConversionEnabled([MarshalAs(UnmanagedType.I1)] bool enabled);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int VC_ReadVoiceConversionInput([Out] float[] samples, int count);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int VC_WriteVoiceConversionOutput([In] float[] samples, int count);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int VC_GetSampleRate();
+
         // Déclaration du Delegate (Le pointeur de fonction managé)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void PluginDiscoveredCallback(int id, [MarshalAs(UnmanagedType.LPStr)] string name);

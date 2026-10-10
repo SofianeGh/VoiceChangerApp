@@ -23,6 +23,7 @@ ECHO_SRC    = $(SRC_DIR)/MyEchoPlugin.cpp
 PLUGIN_SRCS = $(wildcard $(SRC_DIR)/plugins/*.cpp)
 PLUGINS     = $(PLUGIN_DIR)/MyEchoPlugin.dll \
               $(patsubst $(SRC_DIR)/plugins/%.cpp, $(PLUGIN_DIR)/%.dll, $(PLUGIN_SRCS))
+PLUGIN_HDRS = $(wildcard $(SRC_DIR)/plugins/*.h) $(SRC_DIR)/PluginAPI.h
 PLUGIN_FLAGS = -std=c++20 -Wall -Wextra -O3 -Isrc
 SRCS     = $(filter-out $(ECHO_SRC), $(wildcard $(SRC_DIR)/*.cpp))
 OBJS     = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
@@ -40,7 +41,7 @@ $(PLUGIN_DIR)/MyEchoPlugin.dll: $(ECHO_SRC) $(SRC_DIR)/PluginAPI.h | $(PLUGIN_DI
 	$(CXX) $(PLUGIN_FLAGS) $< -o $@ -shared -static
 
 # Plugins du dossier src/plugins
-$(PLUGIN_DIR)/%.dll: $(SRC_DIR)/plugins/%.cpp $(SRC_DIR)/plugins/PluginHelper.h $(SRC_DIR)/PluginAPI.h | $(PLUGIN_DIR)
+$(PLUGIN_DIR)/%.dll: $(SRC_DIR)/plugins/%.cpp $(PLUGIN_HDRS) | $(PLUGIN_DIR)
 	$(CXX) $(PLUGIN_FLAGS) $< -o $@ -shared -static
 
 # Compilation de chaque .cpp en .o

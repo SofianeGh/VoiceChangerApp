@@ -1,8 +1,9 @@
 <Window x:Class="VoiceChangerApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Voice Changer" Width="420" SizeToContent="Height" ResizeMode="CanMinimize"
+        Title="Voice Changer" Width="440" SizeToContent="Height" MaxHeight="900" ResizeMode="CanMinimize"
         Closed="OnClosed">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20">
         <TextBlock Text="{Binding StatusText}" FontWeight="Bold" Margin="0,0,0,16" />
 
@@ -36,6 +37,19 @@
         <TextBlock Text="{Binding RobotFrequency, StringFormat=Fréquence robot : {0:0} Hz}" />
         <Slider Minimum="20" Maximum="100" Value="{Binding RobotFrequency}" Margin="0,4,0,16" />
 
+        <!-- DataContext = VoiceCloneViewModel -->
+        <StackPanel x:Name="ClonePanel" Margin="0,0,0,20">
+            <TextBlock Text="Voix de personnage (IA)" FontWeight="Bold" />
+            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Foreground="Gray" Margin="0,4,0,8" />
+            <ComboBox ItemsSource="{Binding Voices}" SelectedItem="{Binding SelectedVoice}" IsEnabled="{Binding CanLoad}" Margin="0,0,0,8" />
+            <Button Content="Ajouter une voix (.onnx)…" Click="OnAddCloneVoice" IsEnabled="{Binding CanLoad}"
+                    Padding="12,4" HorizontalAlignment="Left" />
+            <CheckBox Content="Activer la voix du personnage" IsChecked="{Binding IsEnabled}" IsEnabled="{Binding IsReady}" Margin="0,10,0,10" />
+            <TextBlock Text="{Binding Transpose, StringFormat=Hauteur de la voix du personnage : {0:+0;-0;0} demi-tons}" />
+            <Slider Minimum="-12" Maximum="12" Value="{Binding Transpose}" TickFrequency="1" IsSnapToTickEnabled="True"
+                    TickPlacement="BottomRight" Margin="0,4,0,0" />
+        </StackPanel>
+
         <TextBlock Text="Plugins" FontWeight="Bold" />
         <TextBlock Text="{Binding PluginHint}" TextWrapping="Wrap" Foreground="Gray" Margin="0,4,0,4" />
         <ItemsControl ItemsSource="{Binding Plugins}">
@@ -47,4 +61,5 @@
         </ItemsControl>
         <Button Content="Ouvrir le dossier des plugins" Click="OnOpenPluginFolder" Padding="12,4" Margin="0,12,0,0" HorizontalAlignment="Left" />
     </StackPanel>
+    </ScrollViewer>
 </Window>

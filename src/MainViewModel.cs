@@ -21,6 +21,9 @@ namespace VoiceChangerApp.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        // Déclenché après chaque (re)création du moteur audio natif
+        public event Action EngineRestarted;
+
         public ObservableCollection<PluginItem> Plugins { get; } = new ObservableCollection<PluginItem>();
 
         // Dossier "plugins" situé à côté de l'exécutable
@@ -171,13 +174,14 @@ namespace VoiceChangerApp.ViewModels
                     Plugins.Add(new PluginItem(FirstPluginIndex + Plugins.Count, name, enabledNames.Contains(name)));
                 });
 
-                AudioCoreInterop.VC_SetEffectParameter(0, 0, _pitchValue);
+                ApplyPitch();
                 AudioCoreInterop.VC_SetEffectParameter(1, 0, _robotFrequency);
                 AudioCoreInterop.VC_SetEffectParameter(1, 1, _robotMix);
                 IsEngineRunning = AudioCoreInterop.VC_Start();
             }
 
             OnPropertyChanged(nameof(PluginHint));
+            EngineRestarted?.Invoke();
         }
 
         public bool IsEngineRunning
@@ -198,10 +202,17 @@ namespace VoiceChangerApp.ViewModels
                 {
                     _pitchValue = value;
                     OnPropertyChanged();
-                    // Index 0 = PitchShiftEffect, Param 0 = Demi-tons
-                    AudioCoreInterop.VC_SetEffectParameter(0, 0, _pitchValue);
+                    ApplyPitch();
                 }
             }
+        }
+
+        // Index 0 = PitchShiftEffect, Param 0 = Demi-tons
+        // À 0 demi-ton l'effet est court-circuité : pas de latence ni d'artefacts inutiles
+        private void ApplyPitch()
+        {
+            AudioCoreInterop.VC_SetEffectParameter(0, 0, _pitchValue);
+            AudioCoreInterop.VC_SetEffectEnabled(0, _pitchValue != 0.0f);
         }
 
         // Lié via Binding WPF / WinUI 3 (Slider de 20 à 100)

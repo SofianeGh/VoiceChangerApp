@@ -76,6 +76,28 @@ extern "C" {
         g_AudioEngine->GetEffectChain()->SetEffectEnabled(static_cast<size_t>(effectIndex), enabled);
     }
 
+    // --- Conversion de voix externe (clonage IA réalisé côté C#) ---
+
+    __declspec(dllexport) void VC_SetVoiceConversionEnabled(bool enabled) {
+        if (g_AudioEngine) g_AudioEngine->SetVoiceConversionEnabled(enabled);
+    }
+
+    // Lit le micro (mono, à la fréquence du moteur) ; renvoie le nombre d'échantillons lus
+    __declspec(dllexport) int VC_ReadVoiceConversionInput(float* samples, int count) {
+        if (!g_AudioEngine || !samples || count <= 0) return 0;
+        return static_cast<int>(g_AudioEngine->ReadConversionInput(samples, static_cast<size_t>(count)));
+    }
+
+    // Renvoie la voix convertie (mono, à la fréquence du moteur) ; renvoie le nombre d'échantillons acceptés
+    __declspec(dllexport) int VC_WriteVoiceConversionOutput(const float* samples, int count) {
+        if (!g_AudioEngine || !samples || count <= 0) return 0;
+        return static_cast<int>(g_AudioEngine->WriteConversionOutput(samples, static_cast<size_t>(count)));
+    }
+
+    __declspec(dllexport) int VC_GetSampleRate() {
+        return g_AudioEngine ? static_cast<int>(g_AudioEngine->GetSampleRate()) : 0;
+    }
+
     // Fonction exportée appelée par le C#
     __declspec(dllexport) void VC_ScanPlugins(const char* directoryPath, PluginDiscoveredCallback callback) {
         if (!directoryPath || !callback || !g_AudioEngine) return;

@@ -13,12 +13,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Exécution des modèles de voix (IA) sur la carte graphique via DirectML, sinon sur le processeur -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Code C# partagé avec le moteur natif -->
     <Compile Include="..\src\*.cs" Link="Core\%(Filename)%(Extension)" />
 
     <!-- DLL natives produites par le Makefile -->
     <None Include="..\bin\CoreAudio.dll" Link="CoreAudio.dll" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\bin\plugins\*.dll" Link="plugins\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+
+    <!-- Modèles de voix locaux (dossier models/, hors dépôt) : voix de personnages et modèle de base ContentVec -->
+    <None Include="..\models\*.onnx" Link="voices\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\models\base\*.onnx" Link="models\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

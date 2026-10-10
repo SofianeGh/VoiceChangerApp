@@ -120,6 +120,27 @@ void AudioEngine::DataCallback(ma_device* pDevice, void* pOutput, const void* pI
     }
 }
 
+void AudioEngine::ProcessVoiceConversion(float* buffer, uint32_t frameCount) {
+    const uint32_t channels = m_config.channels;
+
+    // La voix convertie n'est lue qu'une fois la réserve constituée (et à nouveau après un trou)
+    size_t available = m_conversionOutput.Available();
+    if (m_conversionBuffering && available >= kConversionPrebuffer) m_conversionBuffering = false;
+
+    for (uint32_t i = 0; i < frameCount; ++i) {
+        float mono = 0.0f;
+        for (uint32_t c = 0; c < channels; ++c) mono += buffer[i * channels + c];
+        mono /= static_cast<float>(channels);
+        m_conversionInput.Push(&mono, 1); // Si l'application ne lit plus, la file est pleine et le son est ignoré
+
+        float converted = 0.0f;
+        if (!m_conversionBuffering && m_conversionOutput.Pop(&converted, 1) == 0) {
+            m_conversionBuffering = true;
+        }
+        for (uint32_t c = 0; c < channels; ++c) buffer[i * channels + c] = converted;
+    }
+}
+
 void AudioEngine::ProcessAudio(const float* input, float* output, uint32_t frameCount) {
     if (input == nullptr) {
         std::fill_n(output, frameCount * m_config.channels, 0.0f);
@@ -127,6 +148,10 @@ void AudioEngine::ProcessAudio(const float* input, float* output, uint32_t frame
     }
 
     std::copy_n(input, frameCount * m_config.channels, output);
+
+    if (m_conversionEnabled.load(std::memory_order_relaxed)) {
+        ProcessVoiceConversion(output, frameCount);
+    }
 
     if (m_effectChain) {
         m_effectChain->Process(output, frameCount, m_config.channels, m_config.sampleRate);
