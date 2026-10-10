@@ -20,6 +20,7 @@ public:
     AudioEngine();
     ~AudioEngine();
 
+    // Les identifiants sont les noms des périphériques (UTF-8) ; vide = périphérique par défaut
     bool Initialize(const std::string& inputDeviceId, const std::string& outputDeviceId, AudioEngineConfig config);
     bool Start();
     void Stop();
@@ -33,10 +34,15 @@ private:
 
     ma_context m_context;
     ma_device m_device;
+    ma_device_id m_captureId;
+    ma_device_id m_playbackId;
     AudioEngineConfig m_config;
     bool m_isInitialized = false;
 
     std::shared_ptr<EffectChain> m_effectChain;
     std::shared_ptr<Soundboard> m_soundboard;
-    std::vector<float> m_mixBuffer; 
+    std::vector<float> m_mixBuffer;
 };
+
+// Instance unique du moteur, créée par VC_Initialize et détruite par VC_Stop
+extern std::unique_ptr<AudioEngine> g_AudioEngine;

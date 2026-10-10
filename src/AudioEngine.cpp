@@ -11,7 +11,9 @@
 #pragma comment(lib, "Avrt.lib")
 #endif
 
-AudioEngine::AudioEngine() 
+std::unique_ptr<AudioEngine> g_AudioEngine;
+
+AudioEngine::AudioEngine()
     : m_effectChain(std::make_shared<EffectChain>()),
       m_soundboard(std::make_shared<Soundboard>()) 
 {
@@ -33,14 +35,40 @@ bool AudioEngine::Initialize(const std::string& inputDeviceId, const std::string
         return false;
     }
 
+    // Résolution des noms de périphériques en identifiants miniaudio
+    ma_device_info* playbackInfos = NULL;
+    ma_device_info* captureInfos = NULL;
+    ma_uint32 playbackCount = 0;
+    ma_uint32 captureCount = 0;
+    if (ma_context_get_devices(&m_context, &playbackInfos, &playbackCount, &captureInfos, &captureCount) != MA_SUCCESS) {
+        ma_context_uninit(&m_context);
+        return false;
+    }
+
+    auto findDevice = [](const std::string& name, const ma_device_info* infos, ma_uint32 count, ma_device_id& outId) {
+        for (ma_uint32 i = 0; i < count; ++i) {
+            if (name == infos[i].name) {
+                outId = infos[i].id;
+                return true;
+            }
+        }
+        return false;
+    };
+
+    if ((!inputDeviceId.empty() && !findDevice(inputDeviceId, captureInfos, captureCount, m_captureId)) ||
+        (!outputDeviceId.empty() && !findDevice(outputDeviceId, playbackInfos, playbackCount, m_playbackId))) {
+        ma_context_uninit(&m_context);
+        return false;
+    }
+
     ma_device_config deviceConfig = ma_device_config_init(ma_device_type_duplex);
-    
-    deviceConfig.capture.pDeviceID = NULL; 
+
+    deviceConfig.capture.pDeviceID = inputDeviceId.empty() ? NULL : &m_captureId;
     deviceConfig.capture.format    = ma_format_f32; 
     deviceConfig.capture.channels  = m_config.channels;
     deviceConfig.capture.shareMode = ma_share_mode_shared;
 
-    deviceConfig.playback.pDeviceID = NULL; 
+    deviceConfig.playback.pDeviceID = outputDeviceId.empty() ? NULL : &m_playbackId;
     deviceConfig.playback.format    = ma_format_f32;
     deviceConfig.playback.channels  = m_config.channels;
     deviceConfig.playback.shareMode = ma_share_mode_shared;
@@ -53,6 +81,7 @@ bool AudioEngine::Initialize(const std::string& inputDeviceId, const std::string
     deviceConfig.performanceProfile = ma_performance_profile_low_latency;
 
     if (ma_device_init(&m_context, &deviceConfig, &m_device) != MA_SUCCESS) {
+        ma_context_uninit(&m_context);
         return false;
     }
 

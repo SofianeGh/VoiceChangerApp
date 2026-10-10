@@ -5,6 +5,14 @@ void EffectChain::AddEffect(std::unique_ptr<IEffect> effect) {
     // Utilisation d'un lock classique ici car l'ajout se fait depuis le thread UI principal
     std::lock_guard<std::mutex> lock(m_mutex);
     m_effects.push_back(std::move(effect));
+    m_enabled.push_back(true);
+}
+
+void EffectChain::SetEffectEnabled(size_t index, bool enabled) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (index < m_enabled.size()) {
+        m_enabled[index] = enabled;
+    }
 }
 
 IEffect* EffectChain::GetEffect(size_t index) {
@@ -19,8 +27,10 @@ void EffectChain::Process(float* buffer, uint32_t frameCount, uint32_t channels,
     // Try_lock est fondamental ici (Real-Time Safe) : 
     // Si l'UI est en train d'ajouter un effet, on saute le traitement pour cette frame (pas de clic audio)
     if (m_mutex.try_lock()) {
-        for (auto& effect : m_effects) {
-            effect->Process(buffer, frameCount, channels, sampleRate);
+        for (size_t i = 0; i < m_effects.size(); ++i) {
+            if (m_enabled[i]) {
+                m_effects[i]->Process(buffer, frameCount, channels, sampleRate);
+            }
         }
         m_mutex.unlock();
     }

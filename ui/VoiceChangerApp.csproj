@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>disable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <RootNamespace>VoiceChangerApp</RootNamespace>
+    <AssemblyName>VoiceChangerApp</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Code C# partagé avec le moteur natif -->
+    <Compile Include="..\src\*.cs" Link="Core\%(Filename)%(Extension)" />
+
+    <!-- DLL natives produites par le Makefile -->
+    <None Include="..\bin\CoreAudio.dll" Link="CoreAudio.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\bin\plugins\*.dll" Link="plugins\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

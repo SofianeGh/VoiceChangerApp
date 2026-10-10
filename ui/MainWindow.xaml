@@ -1,0 +1,50 @@
+<Window x:Class="VoiceChangerApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Voice Changer" Width="420" SizeToContent="Height" ResizeMode="CanMinimize"
+        Closed="OnClosed">
+    <StackPanel Margin="20">
+        <TextBlock Text="{Binding StatusText}" FontWeight="Bold" Margin="0,0,0,16" />
+
+        <TextBlock Text="Micro (entrée)" />
+        <ComboBox ItemsSource="{Binding InputDevices}" SelectedItem="{Binding SelectedInput}" Margin="0,4,0,12" />
+
+        <TextBlock Text="Micro virtuel (voix transformée)" />
+        <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,4,0,8" Text="{Binding VirtualMicHint}" />
+        <Expander Header="Avancé : périphérique qui reçoit la voix transformée" Margin="0,0,0,8">
+            <ComboBox ItemsSource="{Binding OutputDevices}" SelectedItem="{Binding SelectedOutput}" Margin="0,4,0,0" />
+        </Expander>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+            <Button x:Name="InstallCableButton" Content="Créer le micro virtuel" Click="OnInstallCable" Padding="12,4" Margin="0,0,8,0">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasDedicatedCable}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>        </StackPanel>
+
+        <TextBlock Text="{Binding PitchValue,StringFormat=Pitch : {0:+0.0;-0.0;0} demi-tons}" />
+        <Slider Minimum="-12" Maximum="12" Value="{Binding PitchValue}" TickFrequency="1" TickPlacement="BottomRight" Margin="0,4,0,16" />
+
+        <TextBlock Text="{Binding RobotMix, StringFormat=Effet robot : {0:P0}}" />
+        <Slider Minimum="0" Maximum="1" Value="{Binding RobotMix}" Margin="0,4,0,16" />
+
+        <TextBlock Text="{Binding RobotFrequency, StringFormat=Fréquence robot : {0:0} Hz}" />
+        <Slider Minimum="20" Maximum="100" Value="{Binding RobotFrequency}" Margin="0,4,0,16" />
+
+        <TextBlock Text="Plugins" FontWeight="Bold" />
+        <TextBlock Text="{Binding PluginHint}" TextWrapping="Wrap" Foreground="Gray" Margin="0,4,0,4" />
+        <ItemsControl ItemsSource="{Binding Plugins}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsEnabled}" Margin="0,4,0,0" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Content="Ouvrir le dossier des plugins" Click="OnOpenPluginFolder" Padding="12,4" Margin="0,12,0,0" HorizontalAlignment="Left" />
+    </StackPanel>
+</Window>
